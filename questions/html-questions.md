@@ -14,17 +14,24 @@ Answers to [Front-end Job Interview Questions - HTML Questions](https://github.c
 * [Why you would use a `srcset` attribute in an image tag? Explain the process the browser uses when evaluating the content of this attribute.](#why-you-would-use-a-srcset-attribute-in-an-image-tag-explain-the-process-the-browser-uses-when-evaluating-the-content-of-this-attribute)
 * [Have you used different HTML templating languages before?](#have-you-used-different-html-templating-languages-before)
 
-### What does a `DOCTYPE` do?
+### What does a DOCTYPE do?
 
-`DOCTYPE` is an abbreviation for “document type”. It is a declaration used in HTML to distinguish between standards mode and [quirks mode](https://quirks.spec.whatwg.org/#history). Its presence tells the browser to render the web page in standards mode.
+**DOCTYPE** is an abbreviation for **DOCument TYPE**.  
+A DOCTYPE is always associated to a **DTD** - for **Document Type Definition**.  
 
-Moral of the story - just add `<!DOCTYPE html>` at the start of your page.
+A DTD defines how documents of a certain type should be structured (i.e. a `button` can contain a `span` but not a `div`), whereas a DOCTYPE declares what DTD a document *supposedly* respects (i.e. this document respects the HTML DTD).  
+
+For webpages, the DOCTYPE declaration is required. It is used to tell user agents what version of the HTML specifications your document respects.  
+Once a user agent has recognized a correct DOCTYPE, it will trigger the **no-quirks mode** matching this DOCTYPE for reading the document.  
+If a user agent doesn't recognize a correct DOCTYPE, it will trigger the **quirks mode**.
+
+The DOCTYPE declaration for the HTML5 standards is `<!DOCTYPE html>`.
 
 ###### References
 
-* https://stackoverflow.com/questions/7695044/what-does-doctype-html-do
-* https://www.w3.org/QA/Tips/Doctype
-* https://quirks.spec.whatwg.org/#history
+* https://html.spec.whatwg.org/multipage/syntax.html#the-doctype
+* https://html.spec.whatwg.org/multipage/xhtml.html
+* https://quirks.spec.whatwg.org/
 
 [[↑] Back to top](#html-questions)
 
@@ -46,7 +53,7 @@ In the back end, the HTML markup will contain `i18n` placeholders and content fo
 
 * Use `lang` attribute in your HTML.
 * Directing users to their native language - Allow a user to change his country/language easily without hassle.
-* Text in images is not a scalable approach - Placing text in an image is still a popular way to get good-looking, non-system fonts to display on any computer. However, to translate image text, each string of text will need to have it's a separate image created for each language. Anything more than a handful of replacements like this can quickly get out of control.
+* Text in images is not a scalable approach - Placing text in an image is still a popular way to get good-looking, non-system fonts to display on any computer. However, to translate image text, each string of text will need to have a separate image created for each language. Anything more than a handful of replacements like this can quickly get out of control.
 * Restrictive words/sentence length - Some content can be longer when written in another language. Be wary of layout or overflow issues in the design. It's best to avoid designing where the amount of text would make or break a design. Character counts come into play with things like headlines, labels, and buttons. They are less of an issue with free-flowing text such as body text or comments.
 * Be mindful of how colors are perceived - Colors are perceived differently across languages and cultures. The design should use color appropriately.
 * Formatting dates and currencies - Calendar dates are sometimes presented in different ways. Eg. "May 31, 2012" in the U.S. vs. "31 May 2012" in parts of Europe.
@@ -129,17 +136,19 @@ Note: The `async` and `defer` attrib­utes are ignored for scripts that have no 
 
 **Placing `<link>`s in the `<head>`**
 
-Putting `<link>`s in the head is part of the specification. Besides that, placing at the top allows the page to render progressively which improves the user experience. The problem with putting stylesheets near the bottom of the document is that it prohibits progressive rendering in many browsers, including Internet Explorer. Some browsers block rendering to avoid having to repaint elements of the page if their styles change. The user is stuck viewing a blank white page. It prevents the flash of unstyled contents.
+Putting `<link>`s in the head is part of proper specification in building an optimized website. When a page first loads, HTML and CSS are being parsed simultaneously; HTML creates the DOM (Document Object Model) and CSS creates the CSSOM (CSS Object Model). Both are needed to create the visuals in a website, allowing for a quick "first meaningful paint" timing. This progressive rendering is a category optimization sites are measured in their performance scores. Putting stylesheets near the bottom of the document is what prohibits progressive rendering in many browsers. Some browsers block rendering to avoid having to repaint elements of the page if their styles change. The user is then stuck viewing a blank white page. Other times there can be flashes of unstyled content (FOUC), which can shows a webpage with no styling applied. 
 
 **Placing `<script>`s just before `</body>`**
 
-`<script>`s block HTML parsing while they are being downloaded and executed. Downloading the scripts at the bottom will allow the HTML to be parsed and displayed to the user first.
+`<script>`s block HTML parsing while they are being downloaded and executed. Placing the scripts at the bottom will allow the HTML to be parsed and displayed to the user first.
 
-An exception for positioning of `<script>`s at the bottom is when your script contains `document.write()`, but these days it's not a good practice to use `document.write()`. Also, placing `<script>`s at the bottom means that the browser cannot start downloading the scripts until the entire document is parsed. One possible workaround is to put `<script>` in the `<head>` and use the `defer` attribute.
+An exception for positioning of `<script>`s at the bottom is when your script contains `document.write()`, but these days it's not a good practice to use `document.write()`. Also, placing `<script>`s at the bottom means that the browser cannot start downloading the scripts until the entire document is parsed. This ensures your code that needs to manipulate DOM elements will not throw and error and halt the entire script. If you need to put `<script>` in the `<head>`, use the `defer` attribute, which will achieve the same effect of downloading and running the script only after the HTML is parsed.
 
 ###### References
 
 * https://developer.yahoo.com/performance/rules.html#css_top
+* https://www.techrepublic.com/blog/web-designer/how-to-prevent-flash-of-unstyled-content-on-your-websites/
+* https://developers.google.com/web/fundamentals/performance/critical-rendering-path/
 
 [[↑] Back to top](#html-questions)
 

@@ -119,9 +119,9 @@ I'm glad that with ES2015 modules, that has support for both synchronous and asy
 
 ### Explain why the following doesn't work as an IIFE: `function foo(){ }();`. What needs to be changed to properly make it an IIFE?
 
-IIFE stands for Immediately Invoked Function Expressions. The JavaScript parser reads `function foo(){ }();` as `function foo(){ }` and `();`, where the former is a function declaration and the latter (a pair of brackets) is an attempt at calling a function but there is no name specified, hence it throws `Uncaught SyntaxError: Unexpected token )`.
+IIFE stands for Immediately Invoked Function Expressions. The JavaScript parser reads `function foo(){ }();` as `function foo(){ }` and `();`, where the former is a *function declaration* and the latter (a pair of brackets) is an attempt at calling a function but there is no name specified, hence it throws `Uncaught SyntaxError: Unexpected token )`.
 
-Here are two ways to fix it that involves adding more brackets: `(function foo(){ })()` and `(function foo(){ }())`. These functions are not exposed in the global scope and you can even omit its name if you do not need to reference itself within the body.
+Here are two ways to fix it that involves adding more brackets: `(function foo(){ })()` and `(function foo(){ }())`. Statements that begin with `function` are considered to be *function declarations*; by wrapping this function within `()`, it becomes a *function expression* which can then be executed with the subsequent `()`. These functions are not exposed in the global scope and you can even omit its name if you do not need to reference itself within the body.
 
 You might also use `void` operator: `void function foo(){ }();`. Unfortunately, there is one issue with such approach. The evaluation of given expression is always `undefined`, so if your IIFE function returns anything, you can't use it. An example:
 
@@ -347,7 +347,7 @@ console.log(add.apply(null, [1, 2])); // 3
 
 Taken word-for-word from [MDN](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Global_objects/Function/bind):
 
-> The `bind()` method creates a new function that, when called, has its this keyword set to the provided value, with a given sequence of arguments preceding any provided when the new function is called.
+> The `bind()` method creates a new function that, when called, has its `this` keyword set to the provided value, with a given sequence of arguments preceding any provided when the new function is called.
 
 In my experience, it is most useful for binding the value of `this` in methods of classes that you want to pass into other functions. This is frequently done in React components.
 
@@ -761,11 +761,21 @@ Some common polyfills are `$.deferred`, Q and Bluebird but not all of them compl
 * Avoid callback hell which can be unreadable.
 * Makes it easy to write sequential asynchronous code that is readable with `.then()`.
 * Makes it easy to write parallel asynchronous code with `Promise.all()`.
+* With promises, these scenarios which are present in callbacks-only coding, will not happen:
+  * Call the callback too early
+  * Call the callback too late (or never)
+  * Call the callback too few or too many times
+  * Fail to pass along any necessary environment/parameters
+  * Swallow any errors/exceptions that may happen
 
 **Cons**
 
 * Slightly more complex code (debatable).
 * In older browsers where ES2015 is not supported, you need to load a polyfill in order to use it.
+
+###### References
+
+* https://github.com/getify/You-Dont-Know-JS/blob/master/async%20%26%20performance/ch3.md
 
 [[↑] Back to top](#js-questions)
 
@@ -820,7 +830,7 @@ Practically, ES2015 has vastly improved JavaScript and made it much nicer to wri
 
 For objects:
 
-* `for` loops - `for (var property in obj) { console.log(property); }`. However, this will also iterate through its inherited properties, and you will add an `obj.hasOwnProperty(property)` check before using it.
+* `for-in` loops - `for (var property in obj) { console.log(property); }`. However, this will also iterate through its inherited properties, and you will add an `obj.hasOwnProperty(property)` check before using it.
 * `Object.keys()` - `Object.keys(obj).forEach(function (property) { ... })`. `Object.keys()` is a static method that will lists all enumerable properties of the object that you pass it.
 * `Object.getOwnPropertyNames()` - `Object.getOwnPropertyNames(obj).forEach(function (property) { ... })`. `Object.getOwnPropertyNames()` is a static method that will lists all enumerable and non-enumerable properties of the object that you pass it.
 
@@ -828,8 +838,24 @@ For arrays:
 
 * `for` loops - `for (var i = 0; i < arr.length; i++)`. The common pitfall here is that `var` is in the function scope and not the block scope and most of the time you would want block scoped iterator variable. ES2015 introduces `let` which has block scope and it is recommended to use that instead. So this becomes: `for (let i = 0; i < arr.length; i++)`.
 * `forEach` - `arr.forEach(function (el, index) { ... })`. This construct can be more convenient at times because you do not have to use the `index` if all you need is the array elements. There are also the `every` and `some` methods which will allow you to terminate the iteration early.
+* `for-of` loops - `for (let elem of arr) { ... }`. ES6 introduces a new loop, the `for-of` loop, that allows you to loop over objects that conform to the [iterable protocol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Iteration_protocols#The_iterable_protocol) such as `String`, `Array`, `Map`, `Set`, etc. It combines the advantages of the `for` loop and the `forEach()` method. The advantage of the `for` loop is that you can break from it, and the advantage of `forEach()` is that it is more concise than the `for` loop because you don't need a counter variable. With the `for-of` loop, you get both the ability to break from a loop and a more concise syntax. 
 
-Most of the time, I would prefer the `.forEach` method, but it really depends on what you are trying to do. `for` loops allow more flexibility, such as prematurely terminate the loop using `break` or incrementing the iterator more than once per loop.
+Most of the time, I would prefer the `.forEach` method, but it really depends on what you are trying to do. Before ES6, we used `for` loops when we needed to prematurely terminate the loop using `break`. But now with ES6, we can do that with `for-of` loops. I would use `for` loops when I need even more flexibility, such as incrementing the iterator more than once per loop. 
+
+Also, when using the `for-of` loop, if you need to access both the index and value of each array element, you can do so with the ES6 Array `entries()` method and destructuring:
+
+```
+const arr = ['a', 'b', 'c'];
+
+for (let [index, elem] of arr.entries()) { 
+  console.log(index, ': ', elem);
+}
+```
+
+###### References
+
+- http://2ality.com/2015/08/getting-started-es6.html#from-for-to-foreach-to-for-of
+- https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/entries
 
 [[↑] Back to top](#js-questions)
 
@@ -1029,13 +1055,52 @@ It's much more verbose to use inheritance in ES5 and the ES6 version is easier t
 
 ### Can you offer a use case for the new arrow => function syntax? How does this new syntax differ from other functions?
 
-TODO
+One obvious benefit of arrow functions is to simplify the syntax needed to create functions, without a need for the `function` keyword. The `this` within arrow functions is also bound to the enclosing scope which is different compared to regular functions where the `this` is determined by the object calling it. Lexically-scoped `this` is useful when invoking callbacks especially in React components.
 
 [[↑] Back to top](#js-questions)
 
 ### What advantage is there for using the arrow syntax for a method in a constructor?
 
-TODO
+The main advantage of using an arrow function as a method inside a constructor is that the value of `this` gets set at the time of the function creation and can't change after that. So, when the constructor is used to create a new object, `this` will always refer to that object. For example, let's say we have a `Person` constructor that takes a first name as an argument has two methods to `console.log` that name, one as a regular function and one as an arrow function:
+
+```js
+const Person = function(firstName) {
+  this.firstName = firstName;
+  this.sayName1 = function() { console.log(this.firstName); };
+  this.sayName2 = () => { console.log(this.firstName); };
+};
+
+const john = new Person('John');
+const dave = new Person('Dave');
+
+john.sayName1(); // John
+john.sayName2(); // John
+
+// The regular function can have its 'this' value changed, but the arrow function cannot
+john.sayName1.call(dave); // Dave (because "this" is now the dave object)
+john.sayName2.call(dave); // John
+
+john.sayName1.apply(dave); // Dave (because 'this' is now the dave object)
+john.sayName2.apply(dave); // John
+
+john.sayName1.bind(dave)(); // Dave (because 'this' is now the dave object)
+john.sayName2.bind(dave)(); // John
+
+var sayNameFromWindow1 = john.sayName1;
+sayNameFromWindow1(); // undefined (because 'this' is now the window object)
+
+var sayNameFromWindow2 = john.sayName2;
+sayNameFromWindow2(); // John
+```
+
+The main takeaway here is that `this` can be changed for a normal function, but the context always stays the same for an arrow function. So even if you are passing around your arrow function to different parts of your application, you wouldn't have to worry about the context changing.
+
+This can be particularly helpful in React class components. If you define a class method for something such as a click handler using a normal function, and then you pass that click handler down into a child component as a prop, you will need to also bind `this` in the constructor of the parent component. If you instead use an arrow function, there is no need to also bind "this", as the method will automatically get its "this" value from its enclosing lexical context. (See this article for an excellent demonstration and sample code: https://medium.com/@machnicki/handle-events-in-react-with-arrow-functions-ede88184bbb)
+
+###### References
+
+* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Arrow_functions
+* https://medium.com/@machnicki/handle-events-in-react-with-arrow-functions-ede88184bbb
 
 [[↑] Back to top](#js-questions)
 
@@ -1127,7 +1192,67 @@ console.log(q); // true
 
 ### ES6 Template Literals offer a lot of flexibility in generating strings, can you give an example?
 
-TODO
+Template literals help make it simple to do string interpolation, or to include variables in a string. Before ES2015, it was common to do something like this:
+
+```js
+var person = { name: 'Tyler', age: 28 };
+console.log('Hi, my name is ' + person.name + ' and I am ' + person.age + ' years old!');
+// 'Hi, my name is Tyler and I am 28 years old!'
+```
+
+With template literals, you can now create that same output like this instead:
+
+```js
+const person = { name: 'Tyler', age: 28 };
+console.log(`Hi, my name is ${person.name} and I am ${person.age} years old!`);
+// 'Hi, my name is Tyler and I am 28 years old!'
+```
+
+Note that you use backticks, not quotes, to indicate that you are using a template literal and that you can insert expressions inside the `${}` placeholders.
+
+A second helpful use case is in creating multi-line strings. Before ES2015, you could create a multi-line string like this:
+
+```js
+console.log('This is line one.\nThis is line two.');
+// This is line one.
+// This is line two.
+```
+
+Or if you wanted to break it up into multiple lines in your code so you didn't have to scroll to the right in your text editor to read a long string, you could also write it like this:
+
+```js
+console.log('This is line one.\n' +
+	'This is line two.');
+// This is line one.
+// This is line two.
+```
+
+Template literals, however, preserve whatever spacing you add to them. For example, to create that same multi-line output that we created above, you can simply do:
+
+```js
+console.log(`This is line one.
+This is line two.`);
+// This is line one.
+// This is line two.
+```
+
+Another use case of template literals would be to use as a substitute for templating libraries for simple variable interpolations:
+
+```js
+const person = { name: 'Tyler', age: 28 };
+document.body.innerHTML = `
+  <div>
+    <p>Name: ${person.name}</p>
+    <p>Name: ${person.age}</p>
+  </div>
+`
+```
+
+**Note that your code may be susceptible to XSS by using `.innerHTML`. Sanitize your data before displaying it if it came from a user!**
+
+###### References
+
+* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals
 
 [[↑] Back to top](#js-questions)
 
